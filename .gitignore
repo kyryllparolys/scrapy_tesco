@@ -1,0 +1,6 @@
+venv
+.idea
+src/__pycache__/
+src/spiders/__pycache__/
+src/quotes.json
+src/.env
