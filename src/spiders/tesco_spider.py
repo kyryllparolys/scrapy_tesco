@@ -34,9 +34,19 @@ class TescoSpider(scrapy.Spider):
         for link in self.all_urls:
             yield scrapy.Request(link, callback=self.parse_departments)
 
-    def parse_items(self, response):
-        data = response.xpath('//div[@class="product-image__container"]').get()
+    def parse_items(self, response: scrapy.http.Response):
+        product_url = response.request.url
+        product_id = product_url.split('/')[-1]
+        product_image = response.xpath('//div[@class="product-image__container"]//img/@src').extract()
+        product_title = response.xpath('//div[@class="product-details-tile__title-wrapper"]/h1//text()').get()
+        category = response.xpath('//span[@class="beans-link__text styled__TextSpan-sc-1xizymv-3 hWdmzc"]//text()').get()
+        price = response.xpath('//span[@data-auto="price-value"]//text()').get()
 
         yield {
-            'data': data
+            'product_url': product_url,
+            'product_id': product_id,
+            'product_image': product_image,
+            'product_title': product_title,
+            'category': category,
+            'price': price,
         }
