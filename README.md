@@ -1,1 +1,1 @@
-Scraper for Tesco website🤫.
+To run scraper withing docker use: `docker build -t <name> .`
