@@ -39,7 +39,8 @@ class TescoSpider(scrapy.Spider):
         product_id = product_url.split('/')[-1]
         product_image = response.xpath('//div[@class="product-image__container"]//img/@src').extract()
         product_title = response.xpath('//div[@class="product-details-tile__title-wrapper"]/h1//text()').get()
-        category = response.xpath('//span[@class="beans-link__text styled__TextSpan-sc-1xizymv-3 hWdmzc"]//text()').get()
+        category = response.xpath(
+            '//span[@class="beans-link__text styled__TextSpan-sc-1xizymv-3 hWdmzc"]//text()').get()
         price = response.xpath('//span[@data-auto="price-value"]//text()').get()
 
         yield {
