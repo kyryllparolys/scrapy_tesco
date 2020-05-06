@@ -1,0 +1,11 @@
+[tool]
+[tool.poetry]
+name = "scrapy_tesco"
+version = "0.0.0"
+description = "Scrapper for tesco website."
+authors = [
+    "Kyryll Parolys <kyryllpar@gmail.com>"
+]
+[tool.poetry.dependencies]
+python = "==3.6"
+scrapy = "==2.1.0"
