@@ -7,5 +7,5 @@ authors = [
     "Kyryll Parolys <kyryllpar@gmail.com>"
 ]
 [tool.poetry.dependencies]
-python = "==3.6"
+python = "==3.6.6"
 scrapy = "==2.1.0"
