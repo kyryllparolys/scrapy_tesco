@@ -55,10 +55,6 @@ class TescoSpider(scrapy.Spider):
         #         'review_text': review.xpath('//p[@class="review__text"]//text()').get()
         #     })
 
-        # TODO: Do this with while
-        reviews = []
-        reviews_xp = response.xpath('//article[@class="review"]')
-        while response.xpath()
 
         product_description = '\n'.join(response.xpath('//div[@id="product-description"]//text()').getall())
         name_address = '\n'.join(response.xpath('//div[@id="manufacturer-address"]//text()').getall())
