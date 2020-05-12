@@ -46,21 +46,10 @@ class TescoSpider(scrapy.Spider):
         product_category = response.xpath('//div[@class="breadcrumbs__content"]//a/span//text()').get()
         product_price = response.xpath('//span[@data-auto="price-value"]//text()').get()
 
-<<<<<<< HEAD
-        # reviews = []
-        # for review in response.xpath('//article[@class="review"]'):
-        #     review_author = review.xpath('//span[@class="review-author__nickname"]//text()').get() if review.xpath(
-        #         '//span[@class="review-author__nickname"]//text()').get() else ''
-        #
-        #     reviews.append({
-        #         'review_title': review.xpath('//h3//text()').get(),
-        #         'stars': int(review.xpath('//span[contains(text(), "stars")]//text()').get().split(' ')[0]),
-        #         'review_author': review_author,
-        #         'review_date': review.xpath('//span[@class="review-author__submission-time"]//text()').get(),
-        #         'review_text': review.xpath('//p[@class="review__text"]//text()').get()
-        #     })
+        more = response.xpath('//p[@class="reviews-list__show-more"]/a/@href').get()
+        if more:
+            yield scrapy.Request(response.urljoin(more), callback=self.parse_items)
 
-=======
         reviews = []
         for review in response.xpath('//article[@class="review"]'):
             review_author = review.xpath('//span[@class="review-author__nickname"]//text()').get() if review.xpath(
@@ -73,7 +62,6 @@ class TescoSpider(scrapy.Spider):
                 'review_date': review.xpath('//span[@class="review-author__submission-time"]//text()').get(),
                 'review_text': review.xpath('//p[@class="review__text"]//text()').get()
             })
->>>>>>> b84054370202e8a82791c722f34c9cae7a63c3a2
 
         product_description = '\n'.join(response.xpath('//div[@id="product-description"]//text()').getall())
         name_address = '\n'.join(response.xpath('//div[@id="manufacturer-address"]//text()').getall())
@@ -102,3 +90,4 @@ class TescoSpider(scrapy.Spider):
         products['recommended'] = recommended_products
 
         yield products
+
