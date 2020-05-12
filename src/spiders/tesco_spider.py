@@ -37,6 +37,10 @@ class TescoSpider(scrapy.Spider):
             yield scrapy.Request(link, callback=self.parse_departments)
 
     def parse_items(self, response):
+        more = response.xpath('//p[@class="reviews-list__show-more"]/a/@href').get()
+        if more is not None:
+            yield scrapy.Request(response.urljoin(more), callback=self.parse_items)
+
         products = ProductsItem()
 
         product_url = response.request.url
@@ -46,21 +50,19 @@ class TescoSpider(scrapy.Spider):
         product_category = response.xpath('//div[@class="breadcrumbs__content"]//a/span//text()').get()
         product_price = response.xpath('//span[@data-auto="price-value"]//text()').get()
 
-        more = response.xpath('//p[@class="reviews-list__show-more"]/a/@href').get()
-        if more:
-            yield scrapy.Request(response.urljoin(more), callback=self.parse_items)
-
         reviews = []
         for review in response.xpath('//article[@class="review"]'):
-            review_author = review.xpath('//span[@class="review-author__nickname"]//text()').get() if review.xpath(
-                '//span[@class="review-author__nickname"]//text()').get() else ''
+            xpath_author = review.xpath('./p[@class="review-author"]/span[@class="review-author__nickname"]/text()')\
+                                 .get()
+            review_author = xpath_author if xpath_author else ''
 
             reviews.append({
-                'review_title': review.xpath('//h3[@class="review__summary"]//text()').get(),
-                'stars': int(review.xpath('//span[contains(text(), "stars")]//text()').get().split(' ')[0]),
+                'review_title': review.xpath('./h3[@class="review__summary"]/text()').get(),
+                'stars': int(review.xpath('//span[contains(text(), "stars")]/text()').get().split(' ')[0]),
                 'review_author': review_author,
-                'review_date': review.xpath('//span[@class="review-author__submission-time"]//text()').get(),
-                'review_text': review.xpath('//p[@class="review__text"]//text()').get()
+                'review_date': review.xpath('./p[@class="review-author"]/span[@class="review-author__submission-time"]'
+                                            '/text()').get(),
+                'review_text': review.xpath('./p[@class="review__text"]/text()').get()
             })
 
         product_description = '\n'.join(response.xpath('//div[@id="product-description"]//text()').getall())
@@ -69,11 +71,14 @@ class TescoSpider(scrapy.Spider):
         net_contents = '\n'.join(response.xpath('//div[@id="net-contents"]//text()').getall())
 
         recommended_products = []
-        for recommend in response.xpath('//div[@class="recommender__wrapper"]//div[@class="product-tile-wrapper"]'):
+        for recommend in response.xpath('//div[@class="recommender-wrapper"]//div[@class="product-tile-wrapper"]'
+                                        '//div[@class="tile-content"]'):
             recommended_products.append({
-                'product_url': response.urljoin(recommend.xpath('//a/@href').get()),
-                'product_title': recommend.xpath('//a/text()').get(),
-                'product_price': float(recommend.xpath('//div[@class="price-details--wrapper"]//text()').getall()[2])
+                'product_url': response.urljoin(recommend.xpath('./a/@href').get()),
+                'product_title': recommend.xpath('./div[@class="product-details--wrapper-variant"]'
+                                                 '/div/h3/a/text()').get(),
+                'product_price': float(recommend.xpath('./div[@class="product-controls__wrapper"]'
+                                                       '/form/div//span[@class="value"]/text()').get())
             })
 
         products['product_url'] = product_url

@@ -55,9 +55,9 @@ TELNETCONSOLE_ENABLED = False
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'scrapy_tesco.pipelines.ScrapyTescoPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'pipelines.tesco_pipelines.TescoPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
