@@ -6,11 +6,6 @@ from items.tesco_items import ProductsItem
 class TescoSpider(scrapy.Spider):
     name = 'tesco'
 
-    def __init__(self, name=None, **kwargs):
-        super().__init__(name=None, **kwargs)
-        self.prefix_url = "https://www.tesco.com"
-        self.all_urls = []
-
     def start_requests(self):
         urls = [
             'https://www.tesco.com/groceries/en-GB/shop/'
@@ -20,24 +15,17 @@ class TescoSpider(scrapy.Spider):
             yield scrapy.Request(url=url, callback=self.parse_departments)
 
     def parse_departments(self, response: scrapy.http.HtmlResponse):
-        items_links = []
         for link in response.xpath('//div[@class="tile-content"]/a/@href').getall():
             if link.startswith('/groceries/en-GB/products/'):
-                items_links.append(response.urljoin(link))
-
-        if items_links:
-            for link in items_links:
-                yield scrapy.Request(link, callback=self.parse_items)
+                yield scrapy.Request(response.urljoin(link), callback=self.parse_items)
 
         for link in response.xpath('//li[@class="list-item"]/a/@href').getall():
             if link.startswith("/groceries/en-GB/shop/"):
-                self.all_urls.append(response.urljoin(link))
-
-        for link in self.all_urls:
-            yield scrapy.Request(link, callback=self.parse_departments)
+                yield scrapy.Request(response.urljoin(link), callback=self.parse_departments)
 
     def parse_items(self, response):
         more = response.xpath('//p[@class="reviews-list__show-more"]/a/@href').get()
+
         if more is not None:
             yield scrapy.Request(response.urljoin(more), callback=self.parse_items)
 
@@ -54,12 +42,12 @@ class TescoSpider(scrapy.Spider):
         for review in response.xpath('//article[@class="review"]'):
             xpath_author = review.xpath('./p[@class="review-author"]/span[@class="review-author__nickname"]/text()')\
                                  .get()
-            review_author = xpath_author if xpath_author else ''
-
+            stars = review.xpath('./div/span[contains(text(), "stars")]/text()')\
+                          .get().split(' ')
             reviews.append({
                 'review_title': review.xpath('./h3[@class="review__summary"]/text()').get(),
-                'stars': int(review.xpath('//span[contains(text(), "stars")]/text()').get().split(' ')[0]),
-                'review_author': review_author,
+                'stars': int(stars[0]) if len(stars) > 1 else "The information couldn't be fetched",
+                'review_author': xpath_author if xpath_author else '',
                 'review_date': review.xpath('./p[@class="review-author"]/span[@class="review-author__submission-time"]'
                                             '/text()').get(),
                 'review_text': review.xpath('./p[@class="review__text"]/text()').get()
@@ -95,4 +83,3 @@ class TescoSpider(scrapy.Spider):
         products['recommended'] = recommended_products
 
         yield products
-
