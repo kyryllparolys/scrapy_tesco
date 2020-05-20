@@ -5,31 +5,35 @@ from items.tesco_items import ProductsItem
 
 class TescoSpider(scrapy.Spider):
     name = 'tesco'
+    allowed_domains = ['tesco.com']
 
     def start_requests(self):
-        urls = [
-            'https://www.tesco.com/groceries/en-GB/shop/'
-        ]
+        urls = ['https://www.tesco.com/groceries/en-GB/shop/', ]
+
+        self.headers = {
+            'Accept-Encoding': 'gzip, deflate, sdch',
+            'Accept-Language': 'en-US,en;q=0.8',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Connection': 'keep-alive',
+        }
 
         for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse_departments)
+            yield scrapy.Request(url, callback=self.parse_departments, headers=self.headers, meta={"proxy": "http://quest.groupbwt.dev:9966"})
 
-    def parse_departments(self, response: scrapy.http.HtmlResponse):
-        for link in response.xpath('//div[@class="tile-content"]/a/@href').getall():
-            if link.startswith('/groceries/en-GB/products/'):
-                yield scrapy.Request(response.urljoin(link), callback=self.parse_items)
-
+    def parse_departments(self, response):
         for link in response.xpath('//li[@class="list-item"]/a/@href').getall():
+            print(link)
             if link.startswith("/groceries/en-GB/shop/"):
-                yield scrapy.Request(response.urljoin(link), callback=self.parse_departments)
+                yield scrapy.Request(response.urljoin(link), callback=self.parse_departments, headers=self.headers, meta={"proxy": "http://quest.groupbwt.dev:9966"})
+
+        for link in response.xpath('//div[@class="tile-content"]/a/@href').getall():
+            print(link)
+            if link.startswith('/groceries/en-GB/products/'):
+                yield scrapy.Request(response.urljoin(link), callback=self.parse_items, headers=self.headers, meta={"proxy": "http://quest.groupbwt.dev:9966"})
 
     def parse_items(self, response):
-        more = response.xpath('//p[@class="reviews-list__show-more"]/a/@href').get()
-
-        if more is not None:
-            yield scrapy.Request(response.urljoin(more), callback=self.parse_items)
-
-        products = ProductsItem()
+        product = ProductsItem()
 
         product_url = response.request.url
         product_id = product_url.split('/')[-1]
@@ -40,10 +44,10 @@ class TescoSpider(scrapy.Spider):
 
         reviews = []
         for review in response.xpath('//article[@class="review"]'):
-            xpath_author = review.xpath('./p[@class="review-author"]/span[@class="review-author__nickname"]/text()')\
-                                 .get()
-            stars = review.xpath('./div/span[contains(text(), "stars")]/text()')\
-                          .get().split(' ')
+            xpath_author = review.xpath('./p[@class="review-author"]/span[@class="review-author__nickname"]/text()') \
+                .get()
+            stars = review.xpath('./div/span[contains(text(), "stars")]/text()') \
+                .get().split(' ')
             reviews.append({
                 'review_title': review.xpath('./h3[@class="review__summary"]/text()').get(),
                 'stars': int(stars[0]) if len(stars) > 1 else "The information couldn't be fetched",
@@ -69,17 +73,17 @@ class TescoSpider(scrapy.Spider):
                                                        '/form/div//span[@class="value"]/text()').get())
             })
 
-        products['product_url'] = product_url
-        products['product_id'] = product_id
-        products['product_image'] = product_image
-        products['product_title'] = product_title
-        products['product_category'] = product_category
-        products['product_price'] = product_price
-        products['product_description'] = product_description
-        products['reviews'] = reviews
-        products['name_address'] = name_address
-        products['return_address'] = return_address
-        products['net_contents'] = net_contents
-        products['recommended'] = recommended_products
+        product['product_url'] = product_url
+        product['product_id'] = product_id
+        product['product_image'] = product_image
+        product['product_title'] = product_title
+        product['product_category'] = product_category
+        product['product_price'] = product_price
+        product['product_description'] = product_description
+        product['reviews'] = reviews
+        product['name_address'] = name_address
+        product['return_address'] = return_address
+        product['net_contents'] = net_contents
+        product['recommended'] = recommended_products
 
-        yield products
+        yield product
