@@ -1,1 +1,3 @@
-To run scraper withing docker use: `docker build -t <name> .`
+Running scraper:
+* Docker
+    * `docker build .`
